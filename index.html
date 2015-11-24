@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8 />
+<title>Cape Cod Fireworks, July 2015</title>
+<meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no' />
+<link href='http://fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.8/mapbox.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox.js/v2.1.8/mapbox.css' rel='stylesheet' />
+<link href='fireworks.css' rel='stylesheet'/>
+</head>
+
+<body>
+<div id='title'>
+<h1>Cape Cod Fireworks</h1>
+<h2>July 4th weekend, 2015</h2>
+
+</div>
+<div id='info'>
+  <h2></h2>
+  <ul id='deets'></ul>
+  <p class='close'>Close</p>
+</div>
+<div id='map'></div>
+<div id='by'>by <a target="_blank" href='http://twitter.com/cpgrubes'>@cpgrubes</a></div>
+
+<script src='geojson.js'></script>
+<script>
+
+L.mapbox.accessToken = 'pk.eyJ1IjoiY2hhc2VncnViZXIiLCJhIjoidV9tdHNYSSJ9.RRyvDLny4YwDwzPCeOJZrA';
+
+ var southWest = L.latLng(40.5, -72), 
+      northEast = L.latLng(43, -68.5), 
+      bounds = L.latLngBounds(southWest, northEast);
+
+var map = L.mapbox.map('map', 'mapbox.dark',{ minZoom: 9 , maxZoom:11,maxBounds:bounds})
+
+var base = L.geoJson(locations);
+  base.eachLayer(function(pt){
+    var markerBase = L.marker([pt.feature.geometry.coordinates[1],pt.feature.geometry.coordinates[0]])
+      .setIcon(L.divIcon({
+        className: 'marker',
+        iconSize:[10,10],
+      }))
+      .addTo(map);
+  });
+
+    var fireworks = L.mapbox.featureLayer().addTo(map);
+  fireworks.on('layeradd', function (e) {
+    var marker = e.layer,
+        feature = marker.feature;
+    marker.setIcon(L.divIcon({
+        className: feature.properties.Class,
+        iconSize: [70,70] 
+    }));
+  });
+  fireworks.setGeoJSON(locations);
+
+  var invisible = L.mapbox.featureLayer().addTo(map);
+  invisible.on('layeradd', function (e) {
+    var marker = e.layer,
+        feature = marker.feature;
+    marker.setIcon(L.divIcon({
+        className: 'invisible',
+        iconSize: [50,50] 
+    }));
+  });
+  invisible.setGeoJSON(locations);
+
+  invisible.on("touchstart mouseover mousedown click", function(evt){
+    var props = evt.layer.feature.properties;
+    $(".close").show();
+    $("#info h2").html(props.Town)
+    $("#deets").empty();
+    $("#deets").append("<li><b>Date:</b> "+props.Date+"</li><li><b>Location:</b> "+props.Location+"</li><li><b>Tips:</b> "+props.Tips+"</li>");
+    $("#info").show();
+  });
+
+  map.on("click", function(){
+    $("#info h2").html('')
+    $("#deets").empty();
+    $(".close").hide();
+    $("#info").hide();
+  })
+
+  $(".close").on("click", function(){
+    $("#info h2").html('')
+    $("#deets").empty();
+    $(this).hide();
+    $("#info").hide();
+  })
+
+  map.fitBounds(fireworks.getBounds())
+
+</script>
+
+</body>
+</html>
